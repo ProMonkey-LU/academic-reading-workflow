@@ -1,0 +1,4 @@
+interface:
+  display_name: "Paper Search"
+  short_description: "Search only the existing local Obsidian paper notes"
+  default_prompt: "Use $paper-search to find relevant papers in my existing Obsidian notes."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Start My Day"
+  short_description: "Build a personalized daily paper recommendation note"
+  default_prompt: "Use $start-my-day to create a personalized paper recommendation note for today."

@@ -1,0 +1,53 @@
+# Copy this file to:
+# $OBSIDIAN_VAULT_PATH/99_System/Config/research_interests.yaml
+
+language: zh
+daily_note_dir: Daily_paper
+papers_dir: 论文笔记
+
+runtime:
+  conda_env: paper
+
+research_domains:
+  example-domain:
+    keywords:
+      - example topic
+      - example method
+    arxiv_categories:
+      - cs.LG
+    cnki_journals: []
+    priority: 5
+
+search_strategy:
+  order:
+    - semantic_scholar
+    - arxiv
+  s2_queries:
+    example-domain:
+      - "example topic example method"
+  s2_recent_days: 30
+  s2_mid_days: 365
+  s2_hot_days: 730
+  s2_limit_per_query: 25
+  s2_fields_of_study:
+    - Environmental Science
+    - Computer Science
+  s2_min_citation_count: 0
+  arxiv_search_mode: keyword
+  arxiv_use_domain_keywords: true
+  arxiv_domain_queries:
+    example-domain:
+      - "example topic AND example method"
+
+cnki_settings:
+  max_papers: 2
+  search_days: 30
+  require_journal_match: true
+
+excluded_keywords:
+  - workshop
+  - survey
+  - tutorial
+
+# Set the optional API credential in the environment instead:
+# export SEMANTIC_SCHOLAR_API_KEY="..."

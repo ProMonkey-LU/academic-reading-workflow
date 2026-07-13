@@ -1,0 +1,208 @@
+schema_version: 1
+skills:
+  - name: research-workflow
+    directory: research-workflow
+    source: personal
+    category: orchestration
+    default_status: active
+    triggers: ["开始科研工作流", "继续论文工作流", "从检索到归档"]
+    excludes: ["single-stage request"]
+  - name: start-my-day
+    directory: start-my-day
+    source: personal
+    category: discovery
+    default_status: active
+    triggers: ["今日论文推荐", "开始今天的论文阅读", "start my day", "每日文献"]
+    conflicts: [nature-literature-pipeline]
+  - name: paper-analyze
+    directory: paper-analyze
+    source: personal
+    category: archive
+    default_status: active
+    triggers: ["生成 Obsidian 论文笔记", "深度分析并归档"]
+    conflicts: [nature-reader]
+  - name: paper-search
+    directory: paper-search
+    source: personal
+    category: local-retrieval
+    default_status: active
+    triggers: ["在我的论文笔记中查找", "搜索本地 Obsidian 文献"]
+    conflicts: [nature-academic-search]
+  - name: extract-paper-images
+    directory: extract-paper-images
+    source: personal
+    category: figure-extraction
+    default_status: active
+    triggers: ["从 arXiv 源码提图", "提取论文原图"]
+  - name: zotero-paper-note
+    directory: zotero-paper-note
+    source: personal
+    category: archive
+    default_status: active
+    triggers: ["Zotero 笔记", "从 Zotero 生成 Obsidian 笔记"]
+
+  - name: nature-academic-search
+    directory: nature-academic-search
+    source: nature
+    category: discovery
+    default_status: active
+  - name: nature-downloader
+    directory: nature-downloader
+    source: nature
+    category: acquisition
+    default_status: active
+  - name: nature-reader
+    directory: nature-reader
+    source: nature
+    category: reading
+    default_status: active
+  - name: nature-ref-verifier
+    directory: nature-ref-verifier
+    source: nature
+    category: citations
+    default_status: active
+  - name: nature-citation
+    directory: nature-citation
+    source: nature
+    category: citations
+    default_status: active
+  - name: nature-writing
+    directory: nature-writing
+    source: nature
+    category: writing
+    default_status: active
+  - name: nature-polishing
+    directory: nature-polishing
+    source: nature
+    category: writing
+    default_status: active
+  - name: nature-figure
+    directory: nature-figure
+    source: nature
+    category: figures
+    default_status: active
+  - name: nature-statistics
+    directory: nature-statistics
+    source: nature
+    category: statistics
+    default_status: active
+  - name: nature-data
+    directory: nature-data
+    source: nature
+    category: data-sharing
+    default_status: active
+  - name: nature-reviewer
+    directory: nature-reviewer
+    source: nature
+    category: peer-review
+    default_status: active
+  - name: nature-response
+    directory: nature-response
+    source: nature
+    category: peer-review
+    default_status: active
+  - name: nature-paper2ppt
+    directory: nature-paper2ppt
+    source: nature
+    category: presentation
+    default_status: active
+  - name: nature-literature-pipeline
+    directory: nature-literature-pipeline
+    source: nature
+    category: automation
+    default_status: optional
+    conflicts: [start-my-day]
+  - name: nature-paper-to-patent
+    directory: nature-paper-to-patent
+    source: nature
+    category: patent
+    default_status: optional
+  - name: nature-experiment-log
+    directory: nature-experiment-log
+    source: nature
+    category: experiment-log
+    default_status: optional
+  - name: researchwrite
+    directory: nature-proposal-writer
+    aliases: [nature-proposal-writer]
+    source: nature
+    category: proposal
+    default_status: optional
+
+  - name: cnki-advanced-search
+    directory: cnki-advanced-search
+    source: local-vendor
+    category: cnki
+    default_status: active
+  - name: cnki-download
+    directory: cnki-download
+    source: local-vendor
+    category: cnki
+    default_status: active
+  - name: cnki-export
+    directory: cnki-export
+    source: local-vendor
+    category: cnki
+    default_status: active
+  - name: cnki-journal-index
+    directory: cnki-journal-index
+    source: local-vendor
+    category: cnki
+    default_status: active
+  - name: cnki-journal-search
+    directory: cnki-journal-search
+    source: local-vendor
+    category: cnki
+    default_status: active
+  - name: cnki-journal-toc
+    directory: cnki-journal-toc
+    source: local-vendor
+    category: cnki
+    default_status: active
+  - name: cnki-navigate-pages
+    directory: cnki-navigate-pages
+    source: local-vendor
+    category: cnki
+    default_status: active
+  - name: cnki-paper-detail
+    directory: cnki-paper-detail
+    source: local-vendor
+    category: cnki
+    default_status: active
+  - name: cnki-parse-results
+    directory: cnki-parse-results
+    source: local-vendor
+    category: cnki
+    default_status: active
+  - name: cnki-search
+    directory: cnki-search
+    source: local-vendor
+    category: cnki
+    default_status: active
+
+  - name: aminer-data-search
+    directory: aminer-open-academic-1.0.5
+    source: local-vendor
+    category: academic-data
+    default_status: optional
+  - name: research-paper-writer
+    directory: research-paper-writer-0.1.0
+    source: local-vendor
+    category: writing
+    default_status: optional
+    conflicts: [nature-writing]
+  - name: Memory
+    directory: memory-1.0.2
+    source: local-vendor
+    category: infrastructure
+    default_status: optional
+  - name: obsidian-ontology-sync
+    directory: obsidian-ontology-sync-1.0.1
+    source: local-vendor
+    category: infrastructure
+    default_status: optional
+  - name: tmux
+    directory: tmux-1.0.0
+    source: local-vendor
+    category: infrastructure
+    default_status: optional

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Paper Analyze"
+  short_description: "Create a structured analytical Obsidian paper note"
+  default_prompt: "Use $paper-analyze to analyze and archive this paper in my Obsidian vault."

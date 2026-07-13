@@ -40,13 +40,15 @@ def main():
     parser.add_argument('--score', type=float, default=0.0, help='质量评分 / Quality score')
     parser.add_argument('--related', type=str, nargs='*', default=[], help='相关论文ID列表 / Related paper IDs')
     parser.add_argument('--vault', type=str, default=None, help='Obsidian vault 路径 / Obsidian vault path')
+    parser.add_argument('--papers-dir', type=str, default='论文笔记',
+                        help='论文目录（相对于 vault）/ Paper directory relative to vault')
     parser.add_argument('--language', type=str, default='zh', choices=['zh', 'en'], help='语言 / Language: zh (中文) or en (English)')
     args = parser.parse_args()
 
     vault_root = get_vault_path(args.vault)
     date = datetime.now().strftime("%Y-%m-%d")
 
-    graph_dir = os.path.join(vault_root, "论文笔记", "PaperGraph")
+    graph_dir = os.path.join(vault_root, args.papers_dir, "PaperGraph")
     os.makedirs(graph_dir, exist_ok=True)
     graph_path = os.path.join(graph_dir, "graph_data.json")
 

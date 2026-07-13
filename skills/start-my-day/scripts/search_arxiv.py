@@ -142,8 +142,8 @@ PURE_CS_PENALTY = -0.5
 S2_RATE_LIMIT_WAIT = 10
 S2_CATEGORY_REQUEST_INTERVAL = 3
 
-# Semantic Scholar API Key（可选，从配置文件读取）
-S2_API_KEY = None
+# Semantic Scholar API Key（可选，仅从环境变量读取）
+S2_API_KEY = os.environ.get("SEMANTIC_SCHOLAR_API_KEY")
 
 
 def load_research_config(config_path: str) -> Dict:
@@ -161,9 +161,13 @@ def load_research_config(config_path: str) -> Dict:
     try:
         with open(config_path, 'r', encoding='utf-8') as f:
             config = yaml.safe_load(f)
-        # 读取 Semantic Scholar API Key（如果配置了）
-        global S2_API_KEY
-        S2_API_KEY = config.get('semantic_scholar_api_key')
+        # 凭据不进入 YAML 或公开仓库。兼容旧配置时只给出迁移提示，
+        # 不再读取其中的明文 key。
+        if config.get('semantic_scholar_api_key'):
+            logger.warning(
+                "Ignoring deprecated semantic_scholar_api_key in YAML; "
+                "set SEMANTIC_SCHOLAR_API_KEY in the environment instead"
+            )
         return config
     except Exception as e:
         logger.error("Error loading config: %s", e)
