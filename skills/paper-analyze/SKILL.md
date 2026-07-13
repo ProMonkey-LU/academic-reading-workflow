@@ -12,8 +12,9 @@ Create an evidence-grounded analytical note in the user's configured Obsidian pa
 1. Resolve `$OBSIDIAN_VAULT_PATH`; ask for it when unset.
 2. Read `$OBSIDIAN_VAULT_PATH/99_System/Config/research_interests.yaml` when present to determine language, paper directory, domains, and conda environment.
 3. Read `references/note-contract.md` before writing the final note.
-4. Search the paper directory by DOI, arXiv ID, and normalized title before creating a file.
-5. If the source is an existing Zotero item, route to `zotero-paper-note` unless the user explicitly prefers a non-Zotero note.
+4. Read `references/legacy-workflow-notes.md` when the task needs the detailed historical analysis template, scoring rubric, Obsidian formatting rules, graph relationship types, or troubleshooting workflow.
+5. Search the paper directory by DOI, arXiv ID, and normalized title before creating a file.
+6. If the source is an existing Zotero item, route to `zotero-paper-note` unless the user explicitly prefers a non-Zotero note.
 
 ## Acquire evidence
 

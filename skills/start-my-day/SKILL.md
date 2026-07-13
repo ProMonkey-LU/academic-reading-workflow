@@ -12,8 +12,9 @@ Generate one dated Obsidian recommendation note from the user's configured resea
 1. Resolve the vault from `$OBSIDIAN_VAULT_PATH`. If unset, ask for the vault path instead of guessing.
 2. Read `$OBSIDIAN_VAULT_PATH/99_System/Config/research_interests.yaml`.
 3. Read `references/configuration.md` for the supported fields and output contract.
-4. Resolve Python from the configured conda environment, falling back to `python3` only when its dependencies are available.
-5. Read `SEMANTIC_SCHOLAR_API_KEY` from the environment when present. Never read or write API keys in YAML.
+4. Read `references/legacy-workflow-notes.md` when generating the full daily note, debugging ranking/linking, or matching the older note layout and scoring style.
+5. Resolve Python from the configured conda environment, falling back to `python3` only when its dependencies are available.
+6. Read `SEMANTIC_SCHOLAR_API_KEY` from the environment when present. Never read or write API keys in YAML.
 
 ## Workflow
 

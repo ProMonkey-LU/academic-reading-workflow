@@ -7,6 +7,8 @@ description: Extract original publication figures from an arXiv source package o
 
 Use `scripts/extract_images.py` to extract useful scientific figures while filtering logos, icons, and small fragments.
 
+Read `references/legacy-workflow-notes.md` when the task needs the older extraction priority rationale, TikZ/PDF fallback handling, output index examples, or troubleshooting notes.
+
 ## Inputs
 
 Accept an arXiv ID, an `arXiv:` identifier, or a local PDF path. Require an explicit output directory. When the images belong to an Obsidian note, resolve the vault from `$OBSIDIAN_VAULT_PATH` and place them beside that note.

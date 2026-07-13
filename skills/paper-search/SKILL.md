@@ -11,10 +11,11 @@ Search the local paper-note directory efficiently and return links into the user
 
 1. Resolve `$OBSIDIAN_VAULT_PATH`; ask for it when unset.
 2. Read `papers_dir` from `99_System/Config/research_interests.yaml`, defaulting to `论文笔记` only when the vault configuration exists but omits the field.
-3. Parse required terms, optional terms, exclusions, author names, identifiers, domains, and tags from the request.
-4. Use `rg` across Markdown files. Search frontmatter separately for identifiers, authors, domains, and tags; search headings and body text for concepts and methods.
-5. Rank exact identifier and title matches first, then author, heading, tag, and body matches.
-6. Read only the highest-ranked notes needed to summarize the result.
+3. Read `references/legacy-workflow-notes.md` when the request needs the older query parsing, result grouping, or relevance-scoring conventions.
+4. Parse required terms, optional terms, exclusions, author names, identifiers, domains, and tags from the request.
+5. Use `rg` across Markdown files. Search frontmatter separately for identifiers, authors, domains, and tags; search headings and body text for concepts and methods.
+6. Rank exact identifier and title matches first, then author, heading, tag, and body matches.
+7. Read only the highest-ranked notes needed to summarize the result.
 
 ## Output
 

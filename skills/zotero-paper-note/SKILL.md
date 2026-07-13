@@ -12,7 +12,8 @@ Use Zotero as the metadata and attachment source, then create a structured analy
 1. Resolve `$OBSIDIAN_VAULT_PATH` and `$ZOTERO_DATA_DIR`. Default `ZOTERO_DATA_DIR` to `$HOME/Zotero` only when that directory exists.
 2. Locate `$ZOTERO_DATA_DIR/zotero.sqlite` and the `storage/` directory.
 3. Read `references/zotero-sql.md` before querying the database.
-4. Read the user's local research configuration when the note should include project-specific implications.
+4. Read `references/legacy-workflow-notes.md` when the task needs the older Zotero query flow, PDF extraction fallbacks, note template, or recommendation-note link update convention.
+5. Read the user's local research configuration when the note should include project-specific implications.
 
 ## Workflow
 
