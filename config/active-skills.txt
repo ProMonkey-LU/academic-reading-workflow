@@ -1,0 +1,34 @@
+# Personal workflow
+research-workflow
+start-my-day
+paper-analyze
+paper-search
+extract-paper-images
+zotero-paper-note
+
+# Nature core
+nature-academic-search
+nature-downloader
+nature-reader
+nature-ref-verifier
+nature-citation
+nature-writing
+nature-polishing
+nature-figure
+nature-statistics
+nature-data
+nature-reviewer
+nature-response
+nature-paper2ppt
+
+# CNKI source tools
+cnki-advanced-search
+cnki-download
+cnki-export
+cnki-journal-index
+cnki-journal-search
+cnki-journal-toc
+cnki-navigate-pages
+cnki-paper-detail
+cnki-parse-results
+cnki-search

@@ -1,7 +1,40 @@
+# Legacy Workflow Notes
+
+These notes preserve user-tested workflow experience from the pre-reorganization skill. Current `SKILL.md` instructions take precedence. Use this file only when the active task needs detailed templates, scoring heuristics, troubleshooting notes, or historical edge-case handling. Do not reintroduce obsolete tool-specific setup, hard-coded private paths, or deprecated scripts.
+
+Source skill: `extract-paper-images`.
+
 ---
-name: extract-paper-images
-description: 从论文中提取图片，优先从arXiv源码包获取真正的论文图
-allowed-tools: Read, Write, Bash
+
+## Contents
+
+- 环境配置
+- Resolve OBSIDIAN_VAULT_PATH
+- Resolve Python from paper conda environment
+- 目标
+- 工作流程
+  - 步骤1：识别论文来源
+  - 步骤2：提取图片（三级优先级）
+    - 优先级1：从arXiv源码包提取（最高优先级）
+    - 优先级2：从PDF直接提取（备选方案）
+  - 步骤3：返回图片路径
+- 提取策略详解
+    - 为什么优先从源码包提取？
+    - 优先级3：TikZ/PGFplots 矢量图处理（重要补充！）
+- 输出格式
+  - 图片索引文件（index.md）
+- 图片索引
+  - 来源: arxiv-source
+  - 来源: pdf-figure
+  - 来源: pdf-extraction
+  - 返回的图片路径
+- 使用说明
+  - 调用方式
+  - 返回内容
+- 重要规则
+- 问题排查
+- 依赖项
+
 ---
 You are the Paper Image Extractor for OrbitOS.
 
@@ -16,7 +49,7 @@ if [ -z "$OBSIDIAN_VAULT_PATH" ]; then
     [ -f "$HOME/.bash_profile" ] && source "$HOME/.bash_profile" 2>/dev/null || true
 fi
 if [ -z "$OBSIDIAN_VAULT_PATH" ]; then
-    OBSIDIAN_VAULT_PATH="$HOME/Documents/Obsidian Vault"
+    # OBSIDIAN_VAULT_PATH must come from the environment or user input
 fi
 
 # Resolve Python from paper conda environment
@@ -168,7 +201,7 @@ images/question_synthesis_pipeline_page1.png (pdf-figure)
 ## 调用方式
 
 ```bash
-/extract-paper-images 2510.24701
+extract-paper-images 2510.24701
 ```
 
 ## 返回内容
@@ -205,14 +238,3 @@ images/question_synthesis_pipeline_page1.png (pdf-figure)
 - PyMuPDF（fitz）
 - requests库（用于下载arXiv源码包）
 - 网络连接（访问arXiv）
-
-# 版本历史
-
-## v2.0 (2025-02-28)
-- **新增**：优先从arXiv源码包提取图片
-- **新增**：三级优先级提取策略（源码包 > PDF图 > PDF提取）
-- **新增**：图片来源标识（arxiv-source、pdf-figure、pdf-extraction）
-- **新增**：从PDF图片文件提取为PNG的功能
-
-## v1.0
-- 初始版本：仅从PDF直接提取图片

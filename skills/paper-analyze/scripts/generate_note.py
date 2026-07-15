@@ -378,11 +378,17 @@ def main():
     parser.add_argument('--authors', type=str, default='[Authors]', help='论文作者 / Paper authors')
     parser.add_argument('--domain', type=str, default='其他', help='论文领域 / Paper domain')
     parser.add_argument('--vault', type=str, default=None, help='Obsidian vault 路径 / Obsidian vault path')
+    parser.add_argument('--papers-dir', type=str, default='论文笔记',
+                        help='论文目录（相对于 vault）/ Paper directory relative to vault')
+    parser.add_argument('--flat', action='store_true',
+                        help='直接写入论文目录，不创建领域子目录 / Do not create a domain subdirectory')
+    parser.add_argument('--force', action='store_true',
+                        help='覆盖已有占位笔记 / Overwrite an existing placeholder note')
     parser.add_argument('--language', type=str, default='zh', choices=['zh', 'en'], help='语言 / Language: zh (中文) or en (English)')
     args = parser.parse_args()
 
     vault_root = get_vault_path(args.vault)
-    papers_dir = os.path.join(vault_root, "论文笔记")
+    papers_dir = os.path.join(vault_root, args.papers_dir)
     date = datetime.now().strftime("%Y-%m-%d")
 
     # 生成笔记文件名：作者年份 - 简短主题（与现有笔记风格一致）
@@ -408,11 +414,14 @@ def main():
     else:
         paper_title_safe = re.sub(r'[ /\\:*?"<>|]+', '_', args.title).strip('_')
 
-    # 笔记直接放在论文笔记目录下（不按领域分子目录）
-    note_dir = papers_dir
+    domain_safe = re.sub(r'[ /\\:*?"<>|]+', '_', args.domain).strip('_') or '其他'
+    note_dir = papers_dir if args.flat else os.path.join(papers_dir, domain_safe)
     os.makedirs(note_dir, exist_ok=True)
 
     note_path = os.path.join(note_dir, f"{paper_title_safe}.md")
+    if os.path.exists(note_path) and not args.force:
+        logger.error("笔记已存在，未覆盖: %s", note_path)
+        sys.exit(2)
     content = generate_note_content(args.paper_id, args.title, args.authors, args.domain, date, args.language)
 
     try:

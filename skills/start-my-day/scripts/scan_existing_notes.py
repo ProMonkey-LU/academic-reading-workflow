@@ -54,9 +54,9 @@ def extract_tag_keywords(tags_str):
     return [t for t in tags if len(t) >= 3]
 
 
-def scan_notes(vault_path):
+def scan_notes(vault_path, papers_dir_name='论文笔记'):
     """扫描论文笔记目录"""
-    papers_dir = os.path.join(vault_path, '论文笔记')
+    papers_dir = os.path.join(vault_path, papers_dir_name)
     if not os.path.isdir(papers_dir):
         print(f"Warning: {papers_dir} not found", file=sys.stderr)
         return [], {}
@@ -108,11 +108,13 @@ def scan_notes(vault_path):
 def main():
     parser = argparse.ArgumentParser(description='Scan existing paper notes in Obsidian vault')
     parser.add_argument('--vault', type=str, required=True, help='Path to Obsidian vault')
+    parser.add_argument('--papers-dir', type=str, default='论文笔记',
+                        help='Paper note directory relative to the vault')
     parser.add_argument('--output', type=str, required=True, help='Output JSON file path')
 
     args = parser.parse_args()
 
-    notes, keyword_to_notes = scan_notes(args.vault)
+    notes, keyword_to_notes = scan_notes(args.vault, args.papers_dir)
 
     result = {
         'notes': notes,

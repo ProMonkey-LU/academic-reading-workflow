@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research Workflow"
+  short_description: "Route multi-stage academic research workflows"
+  default_prompt: "Use $research-workflow to coordinate this task across the appropriate research stages."

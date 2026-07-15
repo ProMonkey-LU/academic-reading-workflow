@@ -1,5 +1,17 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# Runtime outputs
 arxiv_filtered.json
 existing_notes_index.json
+*.log
+
+# Local-only third-party snapshots and configuration
+local-vendor/
+config/research-interests.local.yaml
+.env
+
+# Local test and backup artifacts
+.tmp/
+backups/

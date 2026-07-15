@@ -1,9 +1,96 @@
----
-name: paper-analyze
-description: 深度分析单篇论文，生成详细笔记和评估，图文并茂 / Deep analyze a single paper, generate detailed notes with images
-allowed-tools: Read, Write, Bash, WebFetch
+# Legacy Workflow Notes
+
+These notes preserve user-tested workflow experience from the pre-reorganization skill. Current `SKILL.md` instructions take precedence. Use this file only when the active task needs detailed templates, scoring heuristics, troubleshooting notes, or historical edge-case handling. Do not reintroduce obsolete tool-specific setup, hard-coded private paths, or deprecated scripts.
+
+Source skill: `paper-analyze`.
+
 ---
 
+## Contents
+
+- Language Setting / 语言设置
+  - Language Detection
+- Resolve OBSIDIAN_VAULT_PATH
+- Resolve Python from paper conda environment
+- Read language from config
+- Default to Chinese if not set
+- 目标
+- 工作流程
+  - 实现脚本
+    - 步骤0：初始化环境
+- 创建工作目录
+- 设置变量（从环境变量 OBSIDIAN_VAULT_PATH 读取，或让用户指定）
+    - 步骤1：识别论文
+    - 1.1 解析论文标识符
+    - 1.2 检查现有笔记
+  - 步骤2：获取论文内容
+    - 2.1 下载PDF并提取源码
+- 下载PDF
+- 下载源码包（包含TeX和图片）
+    - 2.2 提取论文元数据
+- 使用curl获取arXiv页面
+- 提取关键信息（使用通用正则，适用于任何论文）
+    - 2.3 读取TeX源码内容
+- 读取各章节内容
+- 读取各章节内容（使用通配符匹配所有 .tex 文件）
+  - 步骤2.1 从arXiv获取
+    - 2.2 从Hugging Face获取（如果适用）
+  - 步骤3：执行深度分析
+    - 3.1 分析摘要
+    - 3.2 分析方法论
+    - 3.3 分析实验
+    - 3.4 生成洞察
+    - 3.5 公式输出规范（Markdown LaTeX）
+  - 步骤3：复制图片并生成索引
+- 复制figures目录到目标位置
+- 列出复制的内容
+  - 步骤4：生成综合论文笔记
+    - 4.1 确定笔记路径和领域
+- 根据论文内容确定领域（智能体/大模型/多模态技术/强化学习_LLM_Agent等）
+- 推断规则：
+- - 如果提到"agent/swarm/multi-agent/orchestration" → 智能体
+- - 如果提到"vision/visual/image/video" → 多模态技术
+- - 如果提到"reinforcement learning/RL" → 强化学习_LLM_Agent
+- - 如果提到"language model/LLM/MoE" → 大模型
+- - 否则 → 其他
+    - 4.2 使用Python生成笔记（正确处理Obsidian格式）
+- 调用外部脚本生成笔记
+    - 4.3 使用obsidian-markdown skill生成最终笔记
+  - 步骤5：更新知识图谱
+    - 5.1 读取现有图谱
+    - 5.2 生成图谱节点和边
+- 调用外部脚本更新知识图谱
+  - 步骤4：生成综合论文笔记
+    - 4.1 笔记结构
+- Warning: 标签名格式规则
+- Obsidian的tag名称不能包含空格，如有空格需用短横线(-)连接
+- 例如：
+- "Agent Swarm" → "Agent-Swarm"
+- "Visual Agentic" → "Visual-Agentic"
+- "MoonViT-3D" → "MoonViT-Three-D"
+- Python脚本(scripts/generate_note.py)会自动处理标签名中的空格
+- 将所有tag.replace(' ', '-')移除空格
+- [论文标题]
+  - 核心信息
+  - 摘要翻译
+    - 英文摘要
+    - 中文翻译
+    - 核心要点提炼
+  - 研究背景与动机
+    - 领域现状
+    - 现有方法的局限性
+    - 研究动机
+  - 研究问题
+    - 核心研究问题
+  - 方法概述
+    - 核心思想
+    - 方法框架
+      - 整体架构
+      - 各模块详细说明
+    - 方法架构图
+- ... 114 more headings in the source notes
+
+---
 # Language Setting / 语言设置
 
 This skill supports both Chinese and English reports. The language is determined by the `language` field in your config file:
@@ -24,7 +111,7 @@ if [ -z "$OBSIDIAN_VAULT_PATH" ]; then
     [ -f "$HOME/.bash_profile" ] && source "$HOME/.bash_profile" 2>/dev/null || true
 fi
 if [ -z "$OBSIDIAN_VAULT_PATH" ]; then
-    OBSIDIAN_VAULT_PATH="$HOME/Documents/Obsidian Vault"
+    # OBSIDIAN_VAULT_PATH must come from the environment or user input
 fi
 
 # Resolve Python from paper conda environment
@@ -51,6 +138,8 @@ Then use this language setting throughout the workflow:
 ---
 
 You are the Paper Analyzer for OrbitOS.
+
+如果论文与海洋热浪/冷浪、海洋气候极端、渔业影响、SST 极端检测、知识抽取或知识图谱相关，先读取 `the research context file configured in $OBSIDIAN_VAULT_PATH/99_System/Config/research_interests.yaml`，并在笔记中加入“对我当前研究的启发”小节，明确连接到用户当前的研究问题。
 
 # 目标
 对特定论文进行深度分析，生成全面笔记，评估质量和价值，并更新知识库。
@@ -647,6 +736,23 @@ Canvas 创建步骤：
 ### 对比总结
 [对所有对比论文的总结]
 
+## 对我当前研究的启发
+
+### 方法与 baseline 启发
+- [这篇论文对 fixed / detrended / shifting / adaptation-adjusted / periodically updated baseline 的选择、解释或比较有什么启发]
+
+### 指标与图表启发
+- [这篇论文建议补充哪些指标、事件类型分析、生命史分析、空间图、时间序列图或对比图]
+
+### 对渔业影响分析的启发
+- [这篇论文能否帮助后续把热浪/冷浪事件与渔业活动、捕捞 effort、物种分布或风险评估联系起来]
+
+### 对知识抽取/知识图谱的启发
+- [这篇论文中有哪些变量、关系、事件定义、影响链条适合结构化进知识图谱]
+
+### 可直接落地到当前项目的动作
+- [可以立刻转成代码、图表、数据表、实验设计或后续文献对比任务的点]
+
 ## 技术路线定位
 
 ### 所属技术路线
@@ -745,7 +851,7 @@ Canvas 创建步骤：
 ### 背景相关
 - [[背景论文1]] - [关系描述]
 - [[背景论文2]] - [关系描述]
-   
+
 ### 后续工作
 - [[后续论文1]] - [关系描述]
 - [[后续论文2]] - [关系描述]
@@ -973,7 +1079,7 @@ $PYTHON "scripts/generate_note.py" --paper-id "$PAPER_ID" --title "$TITLE" --aut
 # 提取图片
 # 调用 extract-paper-images skill
 # # 调用 extract-paper-images skill 提取图片
-# /extract-paper-images "$PAPER_ID" "$DOMAIN" "$TITLE" || \
+# extract-paper-images "$PAPER_ID" "$DOMAIN" "$TITLE" || \
 #     echo "图片提取失败"
 ```
 
@@ -1004,7 +1110,7 @@ cat /tmp/paper_analysis/*.tex > /tmp/paper_analysis/all_content.txt
 ```bash
 # 使用extract-paper-images skill
 # 调用 extract-paper-images skill 提取图片
-# /extract-paper-images "$PAPER_ID" "$DOMAIN" "$TITLE"
+# extract-paper-images "$PAPER_ID" "$DOMAIN" "$TITLE"
 ```
 
 #### 步骤4：生成笔记

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Zotero Paper Note"
+  short_description: "Create an Obsidian note from a local Zotero item"
+  default_prompt: "Use $zotero-paper-note to turn this Zotero paper into an analytical Obsidian note."

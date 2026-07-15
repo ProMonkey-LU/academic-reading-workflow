@@ -1,0 +1,4 @@
+interface:
+  display_name: "Extract Paper Images"
+  short_description: "Extract original figures from arXiv source or PDF"
+  default_prompt: "Use $extract-paper-images to export the original figures from this paper."
