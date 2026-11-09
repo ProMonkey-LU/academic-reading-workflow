@@ -40,18 +40,23 @@ def generate_note_content(paper_id, title, authors, domain, date, language="zh")
         tags_yaml = "\n".join(f'  - {tag}' for tag in tags)
 
         return f'''---
+type: paper
+status: analyzed
 date: "{date}"
 paper_id: "{paper_id}"
 title: "{title}"
 authors: "{authors}"
 domain: "{domain}"
+projects: []
+topics: []
+methods: []
 tags:
 {tags_yaml}
-quality_score: "[SCORE]/10"
+quality_score: ""
+evidence_status: needs-check
 related_papers: []
 created: "{date}"
 updated: "{date}"
-status: analyzed
 ---
 
 # {title}
@@ -207,18 +212,23 @@ status: analyzed
         tags_yaml = "\n".join(f'  - {tag}' for tag in tags)
 
         return f'''---
+type: paper
+status: analyzed
 date: "{date}"
 paper_id: "{paper_id}"
 title: "{title}"
 authors: "{authors}"
 domain: "{domain}"
+projects: []
+topics: []
+methods: []
 tags:
 {tags_yaml}
-quality_score: "[SCORE]/10"
+quality_score: ""
+evidence_status: needs-check
 related_papers: []
 created: "{date}"
 updated: "{date}"
-status: analyzed
 ---
 
 # {title}
@@ -378,7 +388,7 @@ def main():
     parser.add_argument('--authors', type=str, default='[Authors]', help='论文作者 / Paper authors')
     parser.add_argument('--domain', type=str, default='其他', help='论文领域 / Paper domain')
     parser.add_argument('--vault', type=str, default=None, help='Obsidian vault 路径 / Obsidian vault path')
-    parser.add_argument('--papers-dir', type=str, default='论文笔记',
+    parser.add_argument('--papers-dir', type=str, default='30_文献',
                         help='论文目录（相对于 vault）/ Paper directory relative to vault')
     parser.add_argument('--flat', action='store_true',
                         help='直接写入论文目录，不创建领域子目录 / Do not create a domain subdirectory')

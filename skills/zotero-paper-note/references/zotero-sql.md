@@ -9,13 +9,15 @@
 
 ## Safe database copy
 
-Never query the live database while Zotero may be writing to it:
+Prefer the OpenAI Zotero capability or Zotero local API. Use SQLite only when the required local attachment path or metadata is unavailable there.
 
-```bash
-cp "$ZOTERO_DATA_DIR/zotero.sqlite" "$TMPDIR/zotero-query.sqlite"
+Create a consistent, read-only snapshot with the bundled cross-platform helper:
+
+```text
+python scripts/zotero_snapshot.py --json
 ```
 
-Use a unique temporary filename for concurrent runs and remove it after the workflow.
+The helper reads `ZOTERO_DATA_DIR`, copies the database and active WAL into a unique operating-system temporary directory, verifies that the source did not change during the copy, and runs `PRAGMA quick_check`. Pass `--zotero-dir <path>` when the environment variable is unavailable. Remove the returned workspace after the workflow.
 
 ## Find an item
 

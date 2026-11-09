@@ -13,8 +13,9 @@ Generate one dated Obsidian recommendation note from the user's configured resea
 2. Read `$OBSIDIAN_VAULT_PATH/99_System/Config/research_interests.yaml`.
 3. Read `references/configuration.md` for the supported fields and output contract.
 4. Read `references/legacy-workflow-notes.md` when generating the full daily note, debugging ranking/linking, or matching the older note layout and scoring style.
-5. Resolve Python from the configured conda environment, falling back to `python3` only when its dependencies are available.
+5. Resolve Python from the configured conda environment with `conda run -n <env> python`; otherwise use an available `python` or `python3` whose dependencies pass import checks. Never construct an interpreter path under `$HOME/anaconda3`, because that is not portable to Windows.
 6. Read `SEMANTIC_SCHOLAR_API_KEY` from the environment when present. Never read or write API keys in YAML.
+7. Create working files with the platform temporary-directory API. Do not hard-code `/tmp`.
 
 ## Workflow
 

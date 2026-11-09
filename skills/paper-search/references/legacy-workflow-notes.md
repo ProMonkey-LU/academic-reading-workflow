@@ -4,6 +4,8 @@ These notes preserve user-tested workflow experience from the pre-reorganization
 
 Source skill: `paper-search`.
 
+Platform note: the `grep` examples below are historical. Use ripgrep (`rg`) on both macOS and Windows, or a Python `pathlib` fallback when ripgrep is unavailable; keep the same local-only search and ranking rules.
+
 ---
 
 ## Contents

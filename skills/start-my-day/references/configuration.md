@@ -21,8 +21,8 @@ The public repository provides `config/research-interests.example.yaml`. Keep th
 
 ```yaml
 language: zh
-daily_note_dir: Daily_paper
-papers_dir: 论文笔记
+daily_note_dir: 00_收件箱/每日论文推荐
+papers_dir: 30_文献
 runtime:
   conda_env: paper
 research_domains:

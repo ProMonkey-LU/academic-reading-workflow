@@ -30,7 +30,7 @@ python3 scripts/extract_images.py \
   "<output-directory>/index.md"
 ```
 
-Use the configured conda environment when `python3` lacks PyMuPDF or requests.
+Use `conda run -n <env> python` when the configured environment provides PyMuPDF or requests; otherwise use an available `python` or `python3` after import checks. Do not construct a fixed interpreter path. Use the platform temporary-directory API rather than `/tmp`.
 
 ## Output contract
 

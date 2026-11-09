@@ -4,6 +4,8 @@ These notes preserve user-tested workflow experience from the pre-reorganization
 
 Source skill: `extract-paper-images`.
 
+Platform note: historical shell snippets below document the original macOS workflow. On Windows, preserve the extraction priorities while using `conda run -n <env> python`, Python temporary directories, and PowerShell environment variables. Do not reconstruct `$HOME/anaconda3/.../bin/python` or assume `.zshrc` exists.
+
 ---
 
 ## Contents

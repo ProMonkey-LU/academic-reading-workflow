@@ -2,8 +2,8 @@
 # $OBSIDIAN_VAULT_PATH/99_System/Config/research_interests.yaml
 
 language: zh
-daily_note_dir: Daily_paper
-papers_dir: 论文笔记
+daily_note_dir: 00_收件箱/每日论文推荐
+papers_dir: 30_文献
 
 runtime:
   conda_env: paper

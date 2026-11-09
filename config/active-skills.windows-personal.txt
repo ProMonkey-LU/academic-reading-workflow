@@ -1,0 +1,10 @@
+# Use this profile when Nature Skills and grill-me already exist on Windows.
+research-workflow
+start-my-day
+paper-analyze
+paper-search
+extract-paper-images
+zotero-paper-note
+
+# Generic Obsidian formatting maintained by kepano/obsidian-skills.
+obsidian-markdown

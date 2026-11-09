@@ -1,3 +1,6 @@
 [submodule "vendor/nature-skills"]
 	path = vendor/nature-skills
 	url = https://github.com/Yuan1z0825/nature-skills.git
+[submodule "vendor/obsidian-skills"]
+	path = vendor/obsidian-skills
+	url = https://github.com/kepano/obsidian-skills.git

@@ -4,8 +4,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-ACTIVE_FILE="$ROOT/config/active-skills.txt"
+ACTIVE_FILE="${ACTIVE_SKILLS_FILE:-$ROOT/config/active-skills.txt}"
 NATURE_ROOT="$ROOT/vendor/nature-skills"
+OBSIDIAN_ROOT="$ROOT/vendor/obsidian-skills"
 DST="${CODEX_SKILLS_DIR:-${CODEX_HOME:-$HOME/.codex}/skills}"
 MANIFEST="$DST/.academic-reading-workflow-managed"
 
@@ -28,6 +29,10 @@ source_for() {
     printf '%s\n' "$NATURE_ROOT/skills/$name"
     return 0
   fi
+  if [ -f "$OBSIDIAN_ROOT/skills/$name/SKILL.md" ]; then
+    printf '%s\n' "$OBSIDIAN_ROOT/skills/$name"
+    return 0
+  fi
   if [ -f "$ROOT/local-vendor/$name/SKILL.md" ]; then
     printf '%s\n' "$ROOT/local-vendor/$name"
     return 0
@@ -41,6 +46,18 @@ source_for() {
   esac
   if [ -f "$ROOT/local-vendor/$name/SKILL.md" ]; then
     printf '%s\n' "$ROOT/local-vendor/$name"
+    return 0
+  fi
+  return 1
+}
+
+nature_shared_source() {
+  if [ -f "$NATURE_ROOT/skills/nature-shared/SKILL.md" ]; then
+    printf '%s\n' "$NATURE_ROOT/skills/nature-shared"
+    return 0
+  fi
+  if [ -d "$NATURE_ROOT/skills/_shared" ]; then
+    printf '%s\n' "$NATURE_ROOT/skills/_shared"
     return 0
   fi
   return 1
@@ -83,16 +100,26 @@ install_all() {
   done < <(active_names)
 
   if active_names | grep -q '^nature-'; then
-    [ -d "$NATURE_ROOT/skills/_shared" ] || die "nature _shared directory is missing"
-    if [ -e "$DST/_shared" ] || [ -L "$DST/_shared" ]; then
-      if [ ! -L "$DST/_shared" ]; then
-        die "refusing to replace unmanaged path: $DST/_shared"
+    local shared_source shared_name stale_name
+    shared_source="$(nature_shared_source)" || die "nature shared directory is missing"
+    shared_name="$(basename "$shared_source")"
+    if [ -e "$DST/$shared_name" ] || [ -L "$DST/$shared_name" ]; then
+      if [ ! -L "$DST/$shared_name" ]; then
+        die "refusing to replace unmanaged path: $DST/$shared_name"
       fi
-      rm "$DST/_shared"
+      rm "$DST/$shared_name"
     fi
-    ln -s "$NATURE_ROOT/skills/_shared" "$DST/_shared"
+    ln -s "$shared_source" "$DST/$shared_name"
+    for stale_name in _shared nature-shared; do
+      [ "$stale_name" = "$shared_name" ] && continue
+      if [ -L "$DST/$stale_name" ] && [[ "$(readlink "$DST/$stale_name")" == "$ROOT/"* ]]; then
+        unlink "$DST/$stale_name"
+      fi
+    done
   elif [ -L "$DST/_shared" ] && [[ "$(readlink "$DST/_shared")" == "$ROOT/"* ]]; then
     unlink "$DST/_shared"
+  elif [ -L "$DST/nature-shared" ] && [[ "$(readlink "$DST/nature-shared")" == "$ROOT/"* ]]; then
+    unlink "$DST/nature-shared"
   fi
 
   if [ -f "$MANIFEST" ]; then
@@ -140,7 +167,20 @@ check_all() {
   done < <(active_names)
 
   if active_names | grep -q '^nature-'; then
-    [ -L "$DST/_shared" ] || { echo "MISSING LINK _shared" >&2; failures=1; }
+    local shared_source shared_name
+    shared_source="$(nature_shared_source)" || { echo "MISSING SOURCE nature shared" >&2; failures=1; }
+    shared_name="$(basename "$shared_source")"
+    if [ -n "${shared_name:-}" ]; then
+      if [ ! -L "$DST/$shared_name" ]; then
+        echo "MISSING LINK $shared_name" >&2
+        failures=1
+      elif [ "$(readlink "$DST/$shared_name")" != "$shared_source" ]; then
+        echo "WRONG LINK $shared_name -> $(readlink "$DST/$shared_name")" >&2
+        failures=1
+      else
+        echo "OK $shared_name"
+      fi
+    fi
   fi
 
   [ "$failures" -eq 0 ] || exit 1
@@ -150,7 +190,7 @@ list_all() {
   local name source state
   printf '%-34s %-10s %s\n' "SKILL" "STATUS" "SOURCE"
   printf '%-34s %-10s %s\n' "-----" "------" "------"
-  for source in "$ROOT/skills"/* "$NATURE_ROOT/skills"/nature-* "$ROOT/local-vendor"/*; do
+  for source in "$ROOT/skills"/* "$NATURE_ROOT/skills"/nature-* "$OBSIDIAN_ROOT/skills"/* "$ROOT/local-vendor"/*; do
     [ -f "$source/SKILL.md" ] || continue
     name="$(sed -n 's/^name:[[:space:]]*//p' "$source/SKILL.md" | head -1 | tr -d '\r')"
     [ -n "$name" ] || name="$(basename "$source")"
@@ -199,8 +239,23 @@ update_nature() {
   git -C "$ROOT" diff --submodule=log -- vendor/nature-skills || true
 }
 
+update_obsidian() {
+  local old new branch
+  [ -d "$OBSIDIAN_ROOT/.git" ] || [ -f "$OBSIDIAN_ROOT/.git" ] || die "obsidian-skills submodule is not initialized"
+  old="$(git -C "$OBSIDIAN_ROOT" rev-parse HEAD)"
+  branch="$(git -C "$OBSIDIAN_ROOT" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's#^origin/##')"
+  [ -n "$branch" ] || branch="main"
+  git -C "$OBSIDIAN_ROOT" fetch origin "$branch"
+  git -C "$OBSIDIAN_ROOT" merge --ff-only "origin/$branch"
+  new="$(git -C "$OBSIDIAN_ROOT" rev-parse HEAD)"
+  install_all
+  check_all
+  echo "obsidian-skills: $old -> $new"
+  git -C "$ROOT" diff --submodule=log -- vendor/obsidian-skills || true
+}
+
 usage() {
-  echo "Usage: $0 {list|install|check|update-nature|enable NAME|disable NAME}"
+  echo "Usage: $0 {list|install|check|update-nature|update-obsidian|enable NAME|disable NAME}"
 }
 
 case "${1:-}" in
@@ -208,6 +263,7 @@ case "${1:-}" in
   install) install_all ;;
   check) check_all ;;
   update-nature) update_nature ;;
+  update-obsidian) update_obsidian ;;
   enable|disable)
     [ "$#" -eq 2 ] || die "$1 requires one skill name"
     set_enabled "$1" "$2"

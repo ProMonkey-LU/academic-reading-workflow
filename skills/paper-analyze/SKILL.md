@@ -15,6 +15,8 @@ Create an evidence-grounded analytical note in the user's configured Obsidian pa
 4. Read `references/legacy-workflow-notes.md` when the task needs the detailed historical analysis template, scoring rubric, Obsidian formatting rules, graph relationship types, or troubleshooting workflow.
 5. Search the paper directory by DOI, arXiv ID, and normalized title before creating a file.
 6. If the source is an existing Zotero item, route to `zotero-paper-note` unless the user explicitly prefers a non-Zotero note.
+7. For every newly analyzed paper with a resolved PDF, attempt Zotero import by following `references/zotero-import.md` before finalizing the note. Do not mark Zotero as imported unless a real Zotero parent item key or item link is verified.
+8. Use `conda run -n <env> python` or an available `python`/`python3`; do not assume a Unix interpreter path. Use the platform temporary-directory API instead of `/tmp`.
 
 ## Acquire evidence
 
@@ -23,6 +25,17 @@ Create an evidence-grounded analytical note in the user's configured Obsidian pa
 3. Invoke `extract-paper-images` when figures are requested or materially help explain the method and results.
 4. Search existing local notes for related work before adding wikilinks.
 5. Read a local research-context file only if the user's vault configuration points to one and the paper matches that context.
+
+## Zotero import
+
+Use Zotero as the reference-manager destination for detailed analytical notes, not for daily recommendation cards.
+
+1. Before importing, search Zotero by DOI, arXiv ID, normalized title, and first author/year. Prefer the installed OpenAI Zotero capability or Zotero's local API; use a read-only SQLite snapshot only for fields or local attachment paths unavailable through that route.
+2. If a matching Zotero parent item already exists, reuse it and attach the downloaded PDF only when the item has no local PDF attachment.
+3. If no matching item exists and an import-capable Zotero interface is available, create a parent item from DOI/arXiv/CrossRef metadata and attach the downloaded PDF.
+4. After import, verify the parent item key and add `zotero_key` and `zotero_link` to the note frontmatter. Near the core information section, replace `Zotero: --` with `[在 Zotero 中打开](zotero://select/items/0_<item-key>)`.
+5. If Zotero import cannot be completed because no connector, CLI, API credential, or GUI automation route is available, keep the PDF and citation metadata in the temporary working directory only when the user asked for a handoff package; otherwise clean temporary files. In the final response, explicitly say "Zotero 导入未完成" and why.
+6. Never edit the live `zotero.sqlite` database directly. Query copies only, as described by `zotero-paper-note`, and use official connectors, APIs, or user-approved GUI automation for writes.
 
 ## Analyze
 
@@ -34,9 +47,10 @@ Use a consistent 0-10 rubric for novelty, technical quality, experimental adequa
 
 1. Use `scripts/generate_note.py` to create a skeleton only when a note does not already exist.
 2. Fill the skeleton with source-grounded content and insert figures near the paragraphs that discuss them.
-3. Preserve the user's `## 我的笔记` or `## My Notes` section and any unrecognized frontmatter fields when updating an existing note.
-4. Use `scripts/update_graph.py` only after the note is successfully written.
-5. Return the note path, source identifier, analysis limitations, and whether the knowledge graph changed.
+3. Include Zotero status in frontmatter and the core information section: use a verified Zotero link when import succeeded, otherwise `--`.
+4. Preserve the user's `## 我的笔记` or `## My Notes` section and any unrecognized frontmatter fields when updating an existing note.
+5. Use `scripts/update_graph.py` only after the note is successfully written.
+6. Return the note path, source identifier, Zotero import status, analysis limitations, and whether the knowledge graph changed.
 
 ## Boundaries
 

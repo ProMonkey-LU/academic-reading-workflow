@@ -4,6 +4,8 @@ These notes preserve user-tested workflow experience from the pre-reorganization
 
 Source skill: `paper-analyze`.
 
+Platform note: historical shell snippets below document the original macOS workflow. On Windows, preserve the analysis and note conventions while replacing `/tmp`, `find`, `grep`, `cp`, and fixed Conda paths with Python, ripgrep, or PowerShell equivalents. The current `SKILL.md` takes precedence for tool choice.
+
 ---
 
 ## Contents

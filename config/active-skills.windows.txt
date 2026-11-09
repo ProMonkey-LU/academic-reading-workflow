@@ -1,0 +1,25 @@
+# Personal workflow used with Zotero and Obsidian
+research-workflow
+start-my-day
+paper-analyze
+paper-search
+extract-paper-images
+zotero-paper-note
+
+# Maintained Obsidian format support
+obsidian-markdown
+
+# Nature core
+nature-academic-search
+nature-downloader
+nature-reader
+nature-ref-verifier
+nature-citation
+nature-writing
+nature-polishing
+nature-figure
+nature-statistics
+nature-data
+nature-reviewer
+nature-response
+nature-paper2ppt

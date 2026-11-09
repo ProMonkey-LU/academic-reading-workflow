@@ -21,6 +21,8 @@ Include stable identifiers and quote string values:
 date: "YYYY-MM-DD"
 paper_id: "arXiv:XXXX.XXXXX"
 doi: "10.xxxx/example"
+zotero_key: "ABCDEFGH"
+zotero_link: "zotero://select/items/0_ABCDEFGH"
 title: "Paper title"
 authors: "Author list"
 domain: "Configured domain"
@@ -33,7 +35,7 @@ status: "analyzed"
 ---
 ```
 
-Omit unavailable identifiers instead of inventing values.
+Omit unavailable identifiers instead of inventing values. Add `zotero_key` and `zotero_link` only after a Zotero parent item has been verified; otherwise leave the visible Zotero field as `--`.
 
 ## Required sections
 
@@ -49,6 +51,8 @@ Use the configured language consistently. Cover:
 8. Research implications when a local research profile is relevant.
 9. A transparent multidimensional score.
 10. A user-owned notes section.
+
+For detailed notes created from a downloaded PDF, include Zotero status in the core information section. Use a verified `zotero://select/items/0_<item-key>` link when import succeeded, and `--` when it did not.
 
 ## Obsidian conventions
 

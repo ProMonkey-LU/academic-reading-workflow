@@ -39,8 +39,10 @@ Use `research-workflow` only when a request spans multiple stages or the user ex
 
 - Edit personal skills under `skills/` and commit changes to this repository.
 - Treat `vendor/nature-skills/` as read-only. Update it only with `scripts/skills.sh update-nature`.
+- Treat `vendor/obsidian-skills/` as read-only. Update it only with `scripts/skills.sh update-obsidian`; use it for generic Obsidian syntax, not personal research routing.
 - Keep `local-vendor/` untracked. It stores local snapshots whose upstream and redistribution terms are not managed by this repository.
 - Use `config/active-skills.txt` as the single activation list. A skill may remain available in source without entering the Codex trigger catalog.
+- On Windows, `scripts/skills.ps1` defaults to `config/active-skills.windows.txt`. Override it with `ACTIVE_SKILLS_FILE` only when maintaining another machine profile.
 
 ## Local data policy
 

@@ -41,6 +41,28 @@ skills:
     default_status: active
     triggers: ["Zotero 笔记", "从 Zotero 生成 Obsidian 笔记"]
 
+  - name: obsidian-markdown
+    directory: obsidian-markdown
+    source: obsidian-skills
+    category: obsidian-format
+    default_status: active
+    triggers: ["编辑 Obsidian Markdown", "wikilink", "callout", "properties"]
+  - name: obsidian-bases
+    directory: obsidian-bases
+    source: obsidian-skills
+    category: obsidian-format
+    default_status: optional
+  - name: json-canvas
+    directory: json-canvas
+    source: obsidian-skills
+    category: obsidian-format
+    default_status: optional
+  - name: obsidian-cli
+    directory: obsidian-cli
+    source: obsidian-skills
+    category: obsidian-integration
+    default_status: optional
+
   - name: nature-academic-search
     directory: nature-academic-search
     source: nature
@@ -106,6 +128,22 @@ skills:
     source: nature
     category: presentation
     default_status: active
+  - name: nature-image2ppt
+    directory: nature-image2ppt
+    source: nature
+    category: presentation
+    default_status: optional
+  - name: nature-paper-card
+    directory: nature-paper-card
+    source: nature
+    category: paper-intake
+    default_status: optional
+  - name: nature-shared
+    directory: nature-shared
+    source: nature
+    category: internal-reference
+    default_status: dependency
+    excludes: ["standalone user workflow"]
   - name: nature-literature-pipeline
     directory: nature-literature-pipeline
     source: nature

@@ -4,6 +4,8 @@ These notes preserve user-tested workflow experience from the pre-reorganization
 
 Source skill: `start-my-day`.
 
+Platform note: historical shell snippets below document the original macOS workflow. On Windows, preserve their intent but use `conda run -n <env> python`, Python's temporary-directory APIs, and PowerShell environment variables. Do not reconstruct `$HOME/anaconda3/.../bin/python` or assume `.zshrc` exists.
+
 ---
 
 ## Contents

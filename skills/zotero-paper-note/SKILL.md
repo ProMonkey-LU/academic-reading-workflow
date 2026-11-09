@@ -9,17 +9,17 @@ Use Zotero as the metadata and attachment source, then create a structured analy
 
 ## Preflight
 
-1. Resolve `$OBSIDIAN_VAULT_PATH` and `$ZOTERO_DATA_DIR`. Default `ZOTERO_DATA_DIR` to `$HOME/Zotero` only when that directory exists.
-2. Locate `$ZOTERO_DATA_DIR/zotero.sqlite` and the `storage/` directory.
-3. Read `references/zotero-sql.md` before querying the database.
+1. Resolve `$OBSIDIAN_VAULT_PATH`. Prefer the installed OpenAI Zotero capability or Zotero's local API for item discovery, metadata, collections, tags, and indexed full text.
+2. Resolve `$ZOTERO_DATA_DIR` only when a local PDF path or a field unavailable through the API is needed. Default it to `$HOME/Zotero` only when that directory exists.
+3. If database fallback is necessary, locate `$ZOTERO_DATA_DIR/zotero.sqlite` and `storage/`, then read `references/zotero-sql.md` before querying.
 4. Read `references/legacy-workflow-notes.md` when the task needs the older Zotero query flow, PDF extraction fallbacks, note template, or recommendation-note link update convention.
 5. Read the user's local research configuration when the note should include project-specific implications.
 
 ## Workflow
 
 1. Identify the Zotero item by title, DOI, citation key, or explicit item key.
-2. Copy `zotero.sqlite` to a temporary file before querying to avoid lock and consistency problems.
-3. Resolve the parent item metadata, creators, eight-character Zotero item key, attachment key, and PDF path.
+2. Resolve the parent item metadata, creators, and eight-character Zotero item key through the Zotero capability or local API when available.
+3. If the local attachment path cannot be resolved through that route, run `scripts/zotero_snapshot.py` and query only its temporary snapshot. Resolve the attachment key and PDF path from the snapshot.
 4. Verify that the attachment is a real PDF.
 5. Extract full text and selected figures from the local PDF. Prefer embedded figures; render pages only when necessary and disclose the fallback.
 6. Follow `paper-analyze`'s analytical note contract, adding Zotero-specific metadata and the item link.
@@ -39,6 +39,7 @@ Use the parent item key for the link, not the Better BibTeX citation key or atta
 ## Boundaries
 
 - Do not modify the live Zotero database.
+- Do not use SQLite when the Zotero capability or local API already supplies the required data.
 - Do not assume the attachment key equals the parent item key.
 - Do not expose local absolute paths in the public note unless the user asks.
 - If the item has no local PDF, create a metadata-only note only with explicit user approval.

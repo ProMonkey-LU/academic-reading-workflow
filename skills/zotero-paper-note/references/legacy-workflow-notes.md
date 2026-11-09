@@ -4,6 +4,8 @@ These notes preserve user-tested workflow experience from the pre-reorganization
 
 Source skill: `zotero-paper-note`.
 
+Platform note: the SQL and shell examples below preserve the original troubleshooting knowledge. Prefer the OpenAI Zotero capability or local API, then use `scripts/zotero_snapshot.py` for a cross-platform read-only database snapshot. Do not use `/tmp`, `cp`, `find`, or a fixed Conda path on Windows.
+
 ---
 
 ## Contents

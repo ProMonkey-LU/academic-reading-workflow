@@ -6,6 +6,9 @@ paper-search
 extract-paper-images
 zotero-paper-note
 
+# Maintained Obsidian format support
+obsidian-markdown
+
 # Nature core
 nature-academic-search
 nature-downloader
