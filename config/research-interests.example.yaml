@@ -20,8 +20,14 @@ research_domains:
 
 search_strategy:
   order:
+    - openalex
     - semantic_scholar
     - arxiv
+  openalex_enabled: true
+  # OpenAlex reuses s2_queries unless openalex_queries is defined.
+  openalex_limit_per_query: 25
+  openalex_min_citation_count: 0
+  semantic_scholar_enabled: true
   s2_queries:
     example-domain:
       - "example topic example method"
@@ -49,5 +55,6 @@ excluded_keywords:
   - survey
   - tutorial
 
-# Set the optional API credential in the environment instead:
+# API keys are optional for manual daily runs. Set them in the environment only:
+# export OPENALEX_API_KEY="..."
 # export SEMANTIC_SCHOLAR_API_KEY="..."

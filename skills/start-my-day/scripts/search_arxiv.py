@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-arXiv + Semantic Scholar 混合架构论文搜索脚本
-用于 start-my-day skill，搜索最近一个月和最近一年的极火、极热门、极优质论文
+OpenAlex + Semantic Scholar + arXiv hybrid paper search for start-my-day.
 """
 
 import xml.etree.ElementTree as ET
@@ -81,6 +80,7 @@ ARXIV_NS = {
 
 SEMANTIC_SCHOLAR_API_URL = "https://api.semanticscholar.org/graph/v1/paper/search"
 SEMANTIC_SCHOLAR_FIELDS = "title,abstract,publicationDate,citationCount,influentialCitationCount,url,authors,authors.affiliations,externalIds,fieldsOfStudy"
+OPENALEX_API_URL = "https://api.openalex.org/works"
 
 # 默认分类关键词映射（当配置中无用户自定义关键词时使用）
 ARXIV_CATEGORY_KEYWORDS = {
@@ -116,6 +116,7 @@ RECENCY_DEFAULT = 0.0
 # 热门度：高影响力引用数归一化到 0-SCORE_MAX
 # 含义：达到此引用数时视为满分
 POPULARITY_INFLUENTIAL_CITATION_FULL_SCORE = 100
+POPULARITY_CITATION_FULL_SCORE = 100
 
 # 综合推荐评分权重（普通论文）
 WEIGHTS_NORMAL = {
@@ -141,9 +142,11 @@ PURE_CS_PENALTY = -0.5
 # Semantic Scholar 速率限制等待时间（秒）
 S2_RATE_LIMIT_WAIT = 10
 S2_CATEGORY_REQUEST_INTERVAL = 3
+OPENALEX_REQUEST_INTERVAL = 1.1
 
 # Semantic Scholar API Key（可选，仅从环境变量读取）
 S2_API_KEY = os.environ.get("SEMANTIC_SCHOLAR_API_KEY")
+OPENALEX_API_KEY = os.environ.get("OPENALEX_API_KEY")
 
 
 def load_research_config(config_path: str) -> Dict:
@@ -167,6 +170,11 @@ def load_research_config(config_path: str) -> Dict:
             logger.warning(
                 "Ignoring deprecated semantic_scholar_api_key in YAML; "
                 "set SEMANTIC_SCHOLAR_API_KEY in the environment instead"
+            )
+        if config.get('openalex_api_key'):
+            logger.warning(
+                "Ignoring deprecated openalex_api_key in YAML; "
+                "set OPENALEX_API_KEY in the environment instead"
             )
         return config
     except Exception as e:
@@ -486,6 +494,151 @@ def search_semantic_scholar_hot_papers(
                 logger.error("[S2] Failed after %d attempts", max_retries)
                 return []
     
+    return []
+
+
+def reconstruct_openalex_abstract(inverted_index: Optional[Dict]) -> str:
+    """Reconstruct plain text from OpenAlex's abstract inverted index."""
+    if not isinstance(inverted_index, dict):
+        return ""
+    positioned_words = []
+    for word, positions in inverted_index.items():
+        if not isinstance(positions, list):
+            continue
+        for position in positions:
+            if isinstance(position, int):
+                positioned_words.append((position, word))
+    positioned_words.sort(key=lambda item: item[0])
+    return " ".join(word for _, word in positioned_words)
+
+
+def normalize_openalex_work(work: Dict) -> Optional[Dict]:
+    """Map an OpenAlex work to the schema used by the shared scorer."""
+    title = work.get("display_name") or work.get("title")
+    abstract = reconstruct_openalex_abstract(work.get("abstract_inverted_index"))
+    if not title or not abstract:
+        return None
+
+    authors = []
+    affiliations = []
+    for authorship in work.get("authorships") or []:
+        author = authorship.get("author") or {}
+        name = author.get("display_name")
+        if name:
+            authors.append({"name": name})
+        for institution in authorship.get("institutions") or []:
+            institution_name = institution.get("display_name")
+            if institution_name and institution_name not in affiliations:
+                affiliations.append(institution_name)
+
+    ids = work.get("ids") or {}
+    doi = work.get("doi") or ids.get("doi")
+    if doi:
+        doi = re.sub(r"^https?://(?:dx\.)?doi\.org/", "", doi, flags=re.IGNORECASE)
+    external_ids = {"OpenAlex": work.get("id")}
+    if doi:
+        external_ids["DOI"] = doi
+    for source_key, target_key in (("pmid", "PubMed"), ("pmcid", "PubMedCentral"), ("mag", "MAG")):
+        if ids.get(source_key):
+            external_ids[target_key] = ids[source_key]
+
+    primary_topic = work.get("primary_topic") or {}
+    field = primary_topic.get("field") or {}
+    domain = primary_topic.get("domain") or {}
+    fields = [name for name in (field.get("display_name"), domain.get("display_name")) if name]
+
+    primary_location = work.get("primary_location") or {}
+    landing_url = primary_location.get("landing_page_url") or work.get("doi") or work.get("id")
+    pdf_url = primary_location.get("pdf_url")
+    return {
+        "paperId": work.get("id"),
+        "title": title,
+        "abstract": abstract,
+        "publicationDate": work.get("publication_date"),
+        "citationCount": work.get("cited_by_count") or 0,
+        "influentialCitationCount": 0,
+        "url": landing_url,
+        "authors": authors,
+        "affiliations": affiliations,
+        "externalIds": external_ids,
+        "fieldsOfStudy": fields,
+        "openAccessPdf": {"url": pdf_url} if pdf_url else None,
+        "source": "openalex",
+        "hot_score": work.get("cited_by_count") or 0,
+    }
+
+
+def search_openalex_papers(
+    query: str,
+    start_date: datetime,
+    end_date: datetime,
+    top_k: int = 20,
+    max_retries: int = 3,
+    min_citation_count: int = 0,
+) -> List[Dict]:
+    """Search OpenAlex in keyless mode or with an optional free API key."""
+    filters = [
+        f"from_publication_date:{start_date.strftime('%Y-%m-%d')}",
+        f"to_publication_date:{end_date.strftime('%Y-%m-%d')}",
+        "has_abstract:true",
+    ]
+    params = {
+        "search": query,
+        "filter": ",".join(filters),
+        "per-page": min(max(top_k * 3, 25), 100),
+    }
+    if OPENALEX_API_KEY:
+        params["api_key"] = OPENALEX_API_KEY
+
+    headers = {"User-Agent": "StartMyDay-PaperFetcher/2.0"}
+    logger.info("[OpenAlex] Query '%s' from %s to %s", query, start_date.date(), end_date.date())
+
+    for attempt in range(max_retries):
+        try:
+            if HAS_REQUESTS:
+                response = requests.get(
+                    OPENALEX_API_URL,
+                    params=params,
+                    headers=headers,
+                    timeout=20,
+                )
+                response.raise_for_status()
+                data = response.json()
+            else:
+                url = f"{OPENALEX_API_URL}?{urllib.parse.urlencode(params)}"
+                request = urllib.request.Request(url, headers=headers)
+                with urllib.request.urlopen(request, timeout=20) as response:
+                    data = json.loads(response.read().decode("utf-8"))
+
+            papers = []
+            for work in data.get("results", []):
+                paper = normalize_openalex_work(work)
+                if paper and paper["citationCount"] >= min_citation_count:
+                    papers.append(paper)
+            papers.sort(key=lambda paper: paper["citationCount"], reverse=True)
+            logger.info("[OpenAlex] Found %d valid papers, returning top %d", len(papers), top_k)
+            return papers[:top_k]
+        except Exception as exc:
+            status_code = None
+            retry_after = None
+            if HAS_REQUESTS and getattr(exc, "response", None) is not None:
+                status_code = exc.response.status_code
+                retry_after = exc.response.headers.get("Retry-After")
+            logger.warning(
+                "[OpenAlex] Error (attempt %d/%d): %s",
+                attempt + 1,
+                max_retries,
+                exc,
+            )
+            if attempt >= max_retries - 1:
+                break
+            if status_code == 429 and retry_after and retry_after.isdigit():
+                wait_time = min(int(retry_after), 60)
+            else:
+                wait_time = 2 ** attempt
+            time.sleep(wait_time)
+
+    logger.error("[OpenAlex] Failed after %d attempts", max_retries)
     return []
 
 
@@ -941,12 +1094,19 @@ def filter_and_score_papers(
 
         # 计算热门度
         if is_hot_paper_batch:
-            # 高影响力论文：使用 influentialCitationCount
-            inf_cit = paper.get('influentialCitationCount', 0)
-            popularity = min(
-                inf_cit / (POPULARITY_INFLUENTIAL_CITATION_FULL_SCORE / SCORE_MAX),
-                SCORE_MAX,
-            )
+            if paper.get('source') == 'openalex':
+                citations = paper.get('citationCount', 0)
+                popularity = min(
+                    citations / (POPULARITY_CITATION_FULL_SCORE / SCORE_MAX),
+                    SCORE_MAX,
+                )
+            else:
+                # Semantic Scholar provides an influential-citation signal.
+                inf_cit = paper.get('influentialCitationCount', 0)
+                popularity = min(
+                    inf_cit / (POPULARITY_INFLUENTIAL_CITATION_FULL_SCORE / SCORE_MAX),
+                    SCORE_MAX,
+                )
         else:
             # 普通论文（无引用数据）：基于新近性给一个中间热门度
             # 最近7天的新论文可能有更高的"潜在热度"
@@ -977,6 +1137,8 @@ def filter_and_score_papers(
         # 近期窗口加分：S2 recent 窗口的论文更新鲜
         if paper.get('s2_window') == 'recent':
             recommendation_score += RECENT_WINDOW_BONUS
+        if paper.get('openalex_window') == 'recent':
+            recommendation_score += RECENT_WINDOW_BONUS
 
         # 纯 CS 论文降权：fieldsOfStudy 仅含 Computer Science 时降权
         fields = paper.get('fieldsOfStudy', [])
@@ -1003,6 +1165,37 @@ def filter_and_score_papers(
     return scored_papers
 
 
+def paper_identity_keys(paper: Dict) -> Set[str]:
+    """Build stable identifiers for cross-source deduplication."""
+    keys = set()
+    external_ids = paper.get("externalIds") or {}
+    doi = paper.get("doi") or external_ids.get("DOI")
+    if doi:
+        normalized_doi = re.sub(
+            r"^https?://(?:dx\.)?doi\.org/",
+            "",
+            str(doi),
+            flags=re.IGNORECASE,
+        ).strip().lower()
+        if normalized_doi:
+            keys.add(f"doi:{normalized_doi}")
+
+    arxiv_id = (
+        paper.get("arxiv_id")
+        or paper.get("arxivId")
+        or external_ids.get("ArXiv")
+        or external_ids.get("ARXIV")
+    )
+    if arxiv_id:
+        keys.add(f"arxiv:{str(arxiv_id).removeprefix('arXiv:').lower()}")
+
+    title = paper.get("title") or ""
+    normalized_title = re.sub(r"\W+", " ", title.lower(), flags=re.UNICODE).strip()
+    if normalized_title:
+        keys.add(f"title:{normalized_title}")
+    return keys
+
+
 def main():
     """主函数"""
     import argparse
@@ -1011,7 +1204,9 @@ def main():
     if default_config:
         default_config = os.path.join(default_config, '99_System', 'Config', 'research_interests.yaml')
 
-    parser = argparse.ArgumentParser(description='Search and filter arXiv papers with Semantic Scholar integration')
+    parser = argparse.ArgumentParser(
+        description='Search and filter papers with OpenAlex, Semantic Scholar, and arXiv'
+    )
     parser.add_argument('--config', type=str,
                         default=default_config or None,
                         help='Path to research interests config file (or set OBSIDIAN_VAULT_PATH env var)')
@@ -1028,6 +1223,8 @@ def main():
                         help='Comma-separated list of arXiv categories')
     parser.add_argument('--skip-hot-papers', action='store_true',
                         help='Skip searching hot papers from Semantic Scholar')
+    parser.add_argument('--skip-openalex', action='store_true',
+                        help='Skip OpenAlex search')
     parser.add_argument('--focus', type=str, default='',
                         help='User-specified focus keywords for today (comma-separated)')
     parser.add_argument('--days', type=int, default=30,
@@ -1076,9 +1273,18 @@ def main():
     # 解析分类
     categories = args.categories.split(',')
 
+    strategy = config.get('search_strategy', {})
+    openalex_enabled = strategy.get('openalex_enabled', True) and not args.skip_openalex
+    semantic_scholar_enabled = (
+        strategy.get('semantic_scholar_enabled', True) and not args.skip_hot_papers
+    )
     all_scored_papers = []
     recent_papers = []
     hot_papers = []
+    focus_papers = []
+    s2_papers = []
+    openalex_papers = []
+    arxiv_all_papers = []
 
     if focus_keywords:
         # ========== Focus 模式：关键词搜索为主 ==========
@@ -1107,7 +1313,7 @@ def main():
             logger.warning("No papers found for focus keywords")
 
         # Semantic Scholar 也按 focus 搜索（补充高引用论文）
-        if not args.skip_hot_papers:
+        if semantic_scholar_enabled:
             logger.info("=" * 70)
             logger.info("Step 2 (Focus): Searching hot papers for focus keywords from Semantic Scholar")
             logger.info("=" * 70)
@@ -1135,10 +1341,37 @@ def main():
                 logger.info("Scored %d hot papers for focus", len(scored_hot))
                 all_scored_papers.extend(scored_hot)
 
+        if openalex_enabled:
+            logger.info("=" * 70)
+            logger.info("Step 3 (Focus): Searching OpenAlex for focus keywords")
+            logger.info("=" * 70)
+            try:
+                openalex_papers = search_openalex_papers(
+                    query=" ".join(focus_keywords),
+                    start_date=window_1y_start,
+                    end_date=target_date,
+                    top_k=strategy.get('openalex_limit_per_query', 20),
+                )
+            except Exception as e:
+                logger.warning("OpenAlex focus search failed (non-fatal): %s", e)
+                openalex_papers = []
+
+            for paper in openalex_papers:
+                paper['openalex_domain'] = 'focus'
+                paper['openalex_window'] = 'focus'
+            if openalex_papers:
+                scored_openalex = filter_and_score_papers(
+                    papers=openalex_papers,
+                    config=config,
+                    target_date=target_date,
+                    is_hot_paper_batch=True,
+                    focus_keywords=focus_keywords,
+                )
+                logger.info("Scored %d OpenAlex papers for focus", len(scored_openalex))
+                all_scored_papers.extend(scored_openalex)
+
     else:
-        # ========== 普通模式：S2 为主 → arXiv 补充 ==========
-        # 读取搜索策略配置
-        strategy = config.get('search_strategy', {})
+        # ========== 普通模式：OpenAlex + S2 为主，arXiv 补充 ==========
         s2_queries_config = strategy.get('s2_queries', {})
         s2_recent_days = strategy.get('s2_recent_days', 30)
         s2_mid_days = strategy.get('s2_mid_days', 365)
@@ -1168,6 +1401,9 @@ def main():
                 if keywords:
                     query = ' '.join(keywords[:3])
                     all_s2_queries.append((domain_name, query))
+        if not semantic_scholar_enabled:
+            logger.info("Semantic Scholar disabled by configuration or --skip-hot-papers")
+            all_s2_queries = []
 
         # 执行 S2 搜索 —— 拆分为近期 + 中期两个窗口
         s2_papers = []
@@ -1245,16 +1481,74 @@ def main():
         else:
             logger.warning("No papers found from Semantic Scholar")
 
-        # ---- Step 2: arXiv 关键词搜索（补充） ----
+        # ---- Step 2: OpenAlex 领域查询（主） ----
+        if openalex_enabled:
+            logger.info("=" * 70)
+            logger.info("Step 2: OpenAlex domain-specific queries (PRIMARY)")
+            logger.info("=" * 70)
+
+            openalex_queries_config = strategy.get('openalex_queries', s2_queries_config)
+            openalex_limit = strategy.get('openalex_limit_per_query', 25)
+            openalex_min_cit = strategy.get('openalex_min_citation_count', 0)
+            all_openalex_queries = []
+            for domain_name, queries in openalex_queries_config.items():
+                for query in queries:
+                    all_openalex_queries.append((domain_name, query))
+            if not all_openalex_queries:
+                all_openalex_queries = list(all_s2_queries)
+
+            seen_openalex_ids = set()
+            for window_name, start_date, end_date, min_citations in (
+                ('recent', s2_recent_start, s2_recent_end, 0),
+                ('mid', s2_mid_start, s2_mid_end, max(openalex_min_cit, 5)),
+            ):
+                logger.info(
+                    "[OpenAlex] %s window: %s to %s",
+                    window_name,
+                    start_date.date(),
+                    end_date.date(),
+                )
+                for domain_name, query in all_openalex_queries:
+                    try:
+                        papers = search_openalex_papers(
+                            query=query,
+                            start_date=start_date,
+                            end_date=end_date,
+                            top_k=openalex_limit,
+                            min_citation_count=min_citations,
+                        )
+                    except Exception as e:
+                        logger.warning("[OpenAlex] Query '%s' failed: %s -- skipping", query, e)
+                        papers = []
+                    for paper in papers:
+                        paper_id = paper.get('paperId')
+                        if paper_id and paper_id not in seen_openalex_ids:
+                            seen_openalex_ids.add(paper_id)
+                            paper['openalex_domain'] = domain_name
+                            paper['openalex_window'] = window_name
+                            openalex_papers.append(paper)
+                    time.sleep(OPENALEX_REQUEST_INTERVAL)
+
+            if openalex_papers:
+                scored_openalex = filter_and_score_papers(
+                    papers=openalex_papers,
+                    config=config,
+                    target_date=target_date,
+                    is_hot_paper_batch=True,
+                )
+                logger.info("Scored %d OpenAlex papers", len(scored_openalex))
+                all_scored_papers.extend(scored_openalex)
+            else:
+                logger.warning("No papers found from OpenAlex")
+
+        # ---- Step 3: arXiv 关键词搜索（补充） ----
         logger.info("=" * 70)
-        logger.info("Step 2: arXiv keyword search (SUPPLEMENTARY)")
+        logger.info("Step 3: arXiv keyword search (SUPPLEMENTARY)")
         logger.info("=" * 70)
 
         if arxiv_mode == 'keyword' or strategy.get('arxiv_use_domain_keywords', True):
             # 优先使用配置中的 arxiv_domain_queries（AND-logic 精准查询）
             domain_queries = strategy.get('arxiv_domain_queries', {})
-            arxiv_all_papers = []
-
             if domain_queries:
                 logger.info("[arXiv] Using domain-specific AND-logic queries from config")
                 for domain_name, queries in domain_queries.items():
@@ -1345,29 +1639,21 @@ def main():
 
     # ========== 第四步：合并结果并排序 ==========
     logger.info("=" * 70)
-    logger.info("Step 4: Merging and ranking results (S2 + arXiv + CNKI)")
+    logger.info("Step 4: Merging and ranking results (OpenAlex + S2 + arXiv + CNKI)")
     logger.info("=" * 70)
     
     # 按推荐评分排序
     all_scored_papers.sort(key=lambda x: x['scores']['recommendation'], reverse=True)
     
-    # 去重（优先 arXiv ID，其次标题 normalize）
-    seen_ids = set()
-    seen_titles = set()
+    # DOI、arXiv ID 和标准化标题任一相同即视为同一论文。
+    seen_identity_keys = set()
     unique_papers = []
     for p in all_scored_papers:
-        arxiv_id = p.get('arxiv_id') or p.get('arxivId')
-        if arxiv_id:
-            if arxiv_id not in seen_ids:
-                seen_ids.add(arxiv_id)
-                unique_papers.append(p)
-        else:
-            # 没有 arXiv ID 的，使用标题去重（normalize: 小写+去标点）
-            title = p.get('title', '')
-            title_normalized = re.sub(r'[^a-z0-9\s]', '', title.lower()).strip()
-            if title_normalized and title_normalized not in seen_titles:
-                seen_titles.add(title_normalized)
-                unique_papers.append(p)
+        identity_keys = paper_identity_keys(p)
+        if not identity_keys or seen_identity_keys.intersection(identity_keys):
+            continue
+        seen_identity_keys.update(identity_keys)
+        unique_papers.append(p)
     
     logger.info("Total unique papers after deduplication: %d", len(unique_papers))
 
@@ -1384,8 +1670,15 @@ def main():
         paper['note_filename'] = title_to_note_filename(
             paper.get('title', ''),
             paper.get('authors', ''),
-            paper.get('published', '')
+            paper.get('published') or paper.get('publicationDate', '')
         )
+
+    source_counts = {}
+    for paper in unique_papers:
+        source = paper.get('source', 'unknown')
+        source_counts[source] = source_counts.get(source, 0) + 1
+
+    arxiv_count = len(focus_papers) if focus_keywords else len(arxiv_all_papers) + len(recent_papers)
 
     # 准备输出
     output = {
@@ -1400,8 +1693,11 @@ def main():
                 'end': window_1y_end.strftime('%Y-%m-%d')
             }
         },
-        'total_s2': len(s2_papers) if not focus_keywords else len(hot_papers),
-        'total_arxiv': len(recent_papers) if not focus_keywords else len(focus_papers) if focus_keywords else 0,
+        'total_openalex': len(openalex_papers),
+        'total_s2': len(hot_papers) if focus_keywords else len(s2_papers),
+        'total_arxiv': arxiv_count,
+        'total_cnki': cnki_papers_count,
+        'source_counts': source_counts,
         'total_unique': len(unique_papers),
         'top_papers': top_papers
     }

@@ -60,6 +60,6 @@ Copy `config/research-interests.example.yaml` into the Obsidian vault location e
 $OBSIDIAN_VAULT_PATH/99_System/Config/research_interests.yaml
 ```
 
-Keep real research preferences and credentials local. Set the optional Semantic Scholar credential through `SEMANTIC_SCHOLAR_API_KEY`; never write it into YAML or commit it.
+Keep real research preferences and credentials local. The workflow remains functional without API keys through OpenAlex basic search and arXiv; Semantic Scholar's shared anonymous pool may throttle requests. For higher limits and reliable Semantic Scholar access, set optional credentials through `OPENALEX_API_KEY` and `SEMANTIC_SCHOLAR_API_KEY`; never write them into YAML or commit them.
 
 Run `python scripts/skill_doctor.py` to check Python packages, environment variables, ripgrep, the vault profile, and the local Zotero fallback without modifying either application.

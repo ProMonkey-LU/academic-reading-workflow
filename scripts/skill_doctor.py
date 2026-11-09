@@ -78,7 +78,12 @@ def main() -> int:
     if os.environ.get("SEMANTIC_SCHOLAR_API_KEY"):
         report("OK", "SEMANTIC_SCHOLAR_API_KEY is set")
     else:
-        report("WARN", "SEMANTIC_SCHOLAR_API_KEY is not set; public limits will apply")
+        report("OK", "SEMANTIC_SCHOLAR_API_KEY is not set; keyless shared limits will apply")
+
+    if os.environ.get("OPENALEX_API_KEY"):
+        report("OK", "OPENALEX_API_KEY is set")
+    else:
+        report("OK", "OPENALEX_API_KEY is not set; keyless basic search will be used")
 
     return 1 if errors else 0
 

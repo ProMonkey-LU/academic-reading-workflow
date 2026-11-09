@@ -40,10 +40,12 @@ Set user-level environment variables in PowerShell. Replace the example paths fi
 ```powershell
 [Environment]::SetEnvironmentVariable("OBSIDIAN_VAULT_PATH", "D:\Obsidian\Research", "User")
 [Environment]::SetEnvironmentVariable("ZOTERO_DATA_DIR", "$HOME\Zotero", "User")
+# Optional: add these only after obtaining free keys.
+[Environment]::SetEnvironmentVariable("OPENALEX_API_KEY", "replace-with-new-key", "User")
 [Environment]::SetEnvironmentVariable("SEMANTIC_SCHOLAR_API_KEY", "replace-with-new-key", "User")
 ```
 
-Restart Codex after changing user-level variables. Do not commit the real key or research profile.
+The daily workflow works without either key by using OpenAlex basic search and arXiv; Semantic Scholar may be throttled in keyless mode. Restart Codex after changing user-level variables. Do not commit the real key or research profile.
 
 Copy the local, private `research_interests.yaml` through your trusted file-sync method to:
 

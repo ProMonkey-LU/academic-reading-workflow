@@ -5,7 +5,7 @@ description: Generate a manually triggered daily paper recommendation note tailo
 
 # Start My Day
 
-Generate one dated Obsidian recommendation note from the user's configured research profile. Use Semantic Scholar as the primary source and arXiv as a supplement. Use CNKI only when its browser integration is available and Chinese literature is requested by the profile.
+Generate one dated Obsidian recommendation note from the user's configured research profile. Use OpenAlex and Semantic Scholar as complementary primary sources and arXiv as a supplement. Use CNKI only when its browser integration is available and Chinese literature is requested by the profile.
 
 ## Preflight
 
@@ -14,14 +14,14 @@ Generate one dated Obsidian recommendation note from the user's configured resea
 3. Read `references/configuration.md` for the supported fields and output contract.
 4. Read `references/legacy-workflow-notes.md` when generating the full daily note, debugging ranking/linking, or matching the older note layout and scoring style.
 5. Resolve Python from the configured conda environment with `conda run -n <env> python`; otherwise use an available `python` or `python3` whose dependencies pass import checks. Never construct an interpreter path under `$HOME/anaconda3`, because that is not portable to Windows.
-6. Read `SEMANTIC_SCHOLAR_API_KEY` from the environment when present. Never read or write API keys in YAML.
+6. Read optional `OPENALEX_API_KEY` and `SEMANTIC_SCHOLAR_API_KEY` values from the environment when present. Both APIs support this workflow without a key; keys improve rate limits and reliability. Never read or write API keys in YAML.
 7. Create working files with the platform temporary-directory API. Do not hard-code `/tmp`.
 
 ## Workflow
 
 1. Run `scripts/scan_existing_notes.py` against the configured paper-notes directory to build a local deduplication and wikilink index.
 2. Run `scripts/search_arxiv.py --config <config> --output <temporary-json>` for the requested date. Keep generated JSON in a temporary directory, not inside this skill.
-3. Merge and rank results using the script's configured relevance, recency, popularity, and quality scores.
+3. Merge OpenAlex, Semantic Scholar, arXiv, and optional CNKI results using the script's configured relevance, recency, popularity, and quality scores. Deduplicate across sources by DOI, arXiv ID, then normalized title.
 4. Remove papers already represented in the local vault unless the user explicitly wants updates on known work.
 5. Create one dated Markdown note in the configured daily-note directory.
 6. Use Obsidian wikilinks for existing notes and `![[filename|width]]` for local images. Use `--` for missing values; never use `---` as a placeholder.

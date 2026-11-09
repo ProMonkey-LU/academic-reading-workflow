@@ -36,13 +36,16 @@ Each domain may also define `arxiv_categories`, `cnki_journals`, and source-spec
 
 ## Optional search fields
 
-Use `search_strategy` to configure source order, date windows, per-query limits, field-of-study filters, and domain queries. Use `excluded_keywords` to filter unwanted paper types. Use `cnki_settings` only when CNKI is part of the run.
+Use `search_strategy` to configure source order, date windows, per-query limits, field-of-study filters, and domain queries. OpenAlex reuses `s2_queries` by default; define `openalex_queries` only when it needs different terms. Set `openalex_enabled: false` or `semantic_scholar_enabled: false` to disable a provider. Use `excluded_keywords` to filter unwanted paper types. Use `cnki_settings` only when CNKI is part of the run.
 
-Read the Semantic Scholar key only from:
+The workflow supports keyless OpenAlex and Semantic Scholar requests. Optional credentials are read only from:
 
 ```text
+OPENALEX_API_KEY
 SEMANTIC_SCHOLAR_API_KEY
 ```
+
+For a manually triggered daily recommendation, OpenAlex keyless basic search is normally sufficient. Semantic Scholar exposes public keyless endpoints, but its shared anonymous pool may return `429`; the workflow then continues with OpenAlex and arXiv. Configure free keys when running frequently, querying many domains, or needing Semantic Scholar reliably. Never put these values in the YAML profile.
 
 ## Daily note contract
 

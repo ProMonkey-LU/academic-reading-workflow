@@ -52,7 +52,7 @@
 
 ### `start-my-day`
 
-生成当天的个性化论文推荐笔记，读取你的研究画像和已有 Obsidian 笔记，避免重复推荐。
+生成当天的个性化论文推荐笔记，联合 OpenAlex、Semantic Scholar 与 arXiv 检索，读取你的研究画像和已有 Obsidian 笔记，避免重复推荐。不填 API key 也能依靠 OpenAlex 和 arXiv 完成推荐；Semantic Scholar 匿名共享池可能限流，需要稳定使用时再配置免费 key。
 
 示例：
 
